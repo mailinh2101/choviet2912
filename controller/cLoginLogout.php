@@ -41,12 +41,13 @@ class LoginLogoutController {
     private function handleLogin() {
         // Cho phép nhập email hoặc tên đăng nhập qua cùng một input
         $identifier = $_POST['email'];
-        $password = md5($_POST['password']); // Mã hoá MD5
+        $passwordPlain = $_POST['password']; // Plain password (not hashed yet)
         
-        // Ưu tiên phương thức linh hoạt: email hoặc tên đăng nhập
-        $user = $this->model->checkLoginByIdentifier($identifier, $password);
+        // Lấy thông tin người dùng bằng identifier
+        $user = $this->model->getUserByIdentifier($identifier);
         
-        if ($user) {
+        if ($user && password_verify($passwordPlain, $user['password'])) {
+            // Password matches (bcrypt verification)
             $this->createUserSession($user);
             $this->redirectBasedOnRole($user['role_id']);
         } else {

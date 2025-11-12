@@ -1,4 +1,12 @@
 <?php
+// Ensure .env is loaded before attempting to get DB config
+if (!getenv('DB_HOST')) {
+    $bootstrapPath = __DIR__ . '/../config/bootstrap.php';
+    if (file_exists($bootstrapPath)) {
+        require_once $bootstrapPath;
+    }
+}
+
 class Connect {
     public function connect() {
         // Thiết lập múi giờ PHP cho toàn ứng dụng
@@ -6,12 +14,23 @@ class Connect {
             date_default_timezone_set('Asia/Ho_Chi_Minh');
         }
 
-        // Read DB config from environment variables with fallbacks to defaults
-        $dbHost = getenv('DB_HOST') ?: 'localhost';
-        $dbPort = getenv('DB_PORT') ?: '';
-        $dbUser = getenv('DB_USER') ?: 'admin';
-        $dbPass = getenv('DB_PASS') ?: '123456';
-        $dbName = getenv('DB_NAME') ?: 'choviet29';
+        // Read DB config from environment variables (require DigitalOcean .env, no fallbacks)
+        $dbHost = getenv('DB_HOST');
+        $dbPort = getenv('DB_PORT');
+        $dbUser = getenv('DB_USER');
+        $dbPass = getenv('DB_PASS');
+        $dbName = getenv('DB_NAME');
+        
+        // Require all variables to be set (fail fast if .env not loaded)
+        if (!$dbHost || !$dbUser || !$dbPass || !$dbName) {
+            $err = "Missing DB environment variables. Check .env file is loaded: DB_HOST=" . ($dbHost ?: 'MISSING') . ", DB_USER=" . ($dbUser ?: 'MISSING') . ", DB_NAME=" . ($dbName ?: 'MISSING');
+            error_log($err);
+            echo $err;
+            exit();
+        }
+        
+        // Log which DB we're connecting to (helpful for debugging)
+        error_log("[mConnect] Connecting to: host=$dbHost, port=$dbPort, user=$dbUser, db=$dbName");
 
         // If a port is specified and the host is 'localhost', force TCP by using 127.0.0.1
         // This avoids issues where mysqli attempts a Unix socket that doesn't exist

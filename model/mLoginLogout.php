@@ -71,6 +71,35 @@ class mLoginLogout extends Connect {
             $conn->close();
         }
     }
+
+    /**
+     * Lấy thông tin người dùng bằng email hoặc username (để verify password với bcrypt)
+     * 
+     * @param string $identifier Email hoặc tên đăng nhập
+     * @return array|false Thông tin người dùng (bao gồm password hash) hoặc false nếu không tìm thấy
+     */
+    public function getUserByIdentifier($identifier) {
+        $conn = $this->connect();
+
+        try {
+            $sql = "SELECT id, username, email, password, avatar, role_id
+                    FROM users
+                    WHERE (email = ? OR username = ?)";
+            $stmt = $conn->prepare($sql);
+            $stmt->bind_param("ss", $identifier, $identifier);
+            $stmt->execute();
+            $result = $stmt->get_result();
+            $user = $result->fetch_assoc();
+            $stmt->close();
+
+            return $user;
+        } catch (Exception $e) {
+            error_log("Lỗi lấy user by identifier: " . $e->getMessage());
+            return false;
+        } finally {
+            $conn->close();
+        }
+    }
     
     // ==================== PHƯƠNG THỨC KIỂM TRA TỒN TẠI ====================
     
