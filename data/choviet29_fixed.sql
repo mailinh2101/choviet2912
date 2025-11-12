@@ -1067,7 +1067,6 @@ CREATE ALGORITHM=UNDEFINED VIEW `v_seller_ratings` AS SELECT `u`.`id` AS `seller
 -- Chỉ mục cho bảng `banners`
 --
 ALTER TABLE `banners`
-  ADD PRIMARY KEY (`id`),
   ADD KEY `idx_status` (`status`),
   ADD KEY `idx_display_order` (`display_order`),
   ADD KEY `idx_created_at` (`created_at`);
@@ -1076,7 +1075,6 @@ ALTER TABLE `banners`
 -- Chỉ mục cho bảng `inventory_history`
 --
 ALTER TABLE `inventory_history`
-  ADD PRIMARY KEY (`id`),
   ADD KEY `idx_product_id` (`product_id`),
   ADD KEY `idx_order_id` (`order_id`),
   ADD KEY `idx_change_type` (`change_type`),
@@ -1087,14 +1085,12 @@ ALTER TABLE `inventory_history`
 -- Chỉ mục cho bảng `livestream`
 --
 ALTER TABLE `livestream`
-  ADD PRIMARY KEY (`id`),
   ADD KEY `user_id` (`user_id`);
 
 --
 -- Chỉ mục cho bảng `livestream_cart_items`
 --
 ALTER TABLE `livestream_cart_items`
-  ADD PRIMARY KEY (`id`),
   ADD UNIQUE KEY `unique_cart_item` (`user_id`,`livestream_id`,`product_id`),
   ADD KEY `user_id` (`user_id`),
   ADD KEY `livestream_id` (`livestream_id`),
@@ -1104,7 +1100,6 @@ ALTER TABLE `livestream_cart_items`
 -- Chỉ mục cho bảng `livestream_interactions`
 --
 ALTER TABLE `livestream_interactions`
-  ADD PRIMARY KEY (`id`),
   ADD KEY `livestream_id` (`livestream_id`),
   ADD KEY `user_id` (`user_id`),
   ADD KEY `action_type` (`action_type`);
@@ -1113,7 +1108,6 @@ ALTER TABLE `livestream_interactions`
 -- Chỉ mục cho bảng `livestream_messages`
 --
 ALTER TABLE `livestream_messages`
-  ADD PRIMARY KEY (`id`),
   ADD KEY `livestream_id` (`livestream_id`),
   ADD KEY `user_id` (`user_id`);
 
@@ -1121,7 +1115,6 @@ ALTER TABLE `livestream_messages`
 -- Chỉ mục cho bảng `livestream_orders`
 --
 ALTER TABLE `livestream_orders`
-  ADD PRIMARY KEY (`id`),
   ADD UNIQUE KEY `order_code` (`order_code`),
   ADD KEY `user_id` (`user_id`),
   ADD KEY `livestream_id` (`livestream_id`),
@@ -1131,7 +1124,6 @@ ALTER TABLE `livestream_orders`
 -- Chỉ mục cho bảng `livestream_order_items`
 --
 ALTER TABLE `livestream_order_items`
-  ADD PRIMARY KEY (`id`),
   ADD KEY `order_id` (`order_id`),
   ADD KEY `product_id` (`product_id`);
 
@@ -1139,7 +1131,6 @@ ALTER TABLE `livestream_order_items`
 -- Chỉ mục cho bảng `livestream_packages`
 --
 ALTER TABLE `livestream_packages`
-  ADD PRIMARY KEY (`id`),
   ADD KEY `idx_status` (`status`),
   ADD KEY `idx_price` (`price`);
 
@@ -1147,7 +1138,6 @@ ALTER TABLE `livestream_packages`
 -- Chỉ mục cho bảng `livestream_payment_history`
 --
 ALTER TABLE `livestream_payment_history`
-  ADD PRIMARY KEY (`id`),
   ADD KEY `idx_user_id` (`user_id`),
   ADD KEY `idx_package_id` (`package_id`),
   ADD KEY `idx_payment_status` (`payment_status`),
@@ -1157,7 +1147,6 @@ ALTER TABLE `livestream_payment_history`
 -- Chỉ mục cho bảng `livestream_products`
 --
 ALTER TABLE `livestream_products`
-  ADD PRIMARY KEY (`id`),
   ADD KEY `livestream_id` (`livestream_id`),
   ADD KEY `product_id` (`product_id`);
 
@@ -1165,7 +1154,6 @@ ALTER TABLE `livestream_products`
 -- Chỉ mục cho bảng `livestream_registrations`
 --
 ALTER TABLE `livestream_registrations`
-  ADD PRIMARY KEY (`id`),
   ADD KEY `idx_user_id` (`user_id`),
   ADD KEY `idx_package_id` (`package_id`),
   ADD KEY `idx_status` (`status`),
@@ -1175,7 +1163,6 @@ ALTER TABLE `livestream_registrations`
 -- Chỉ mục cho bảng `livestream_viewers`
 --
 ALTER TABLE `livestream_viewers`
-  ADD PRIMARY KEY (`id`),
   ADD UNIQUE KEY `unique_viewer` (`livestream_id`,`user_id`),
   ADD KEY `livestream_id` (`livestream_id`),
   ADD KEY `user_id` (`user_id`);
@@ -1184,7 +1171,6 @@ ALTER TABLE `livestream_viewers`
 -- Chỉ mục cho bảng `messages`
 --
 ALTER TABLE `messages`
-  ADD PRIMARY KEY (`id`),
   ADD KEY `sender_id` (`sender_id`),
   ADD KEY `receiver_id` (`receiver_id`),
   ADD KEY `product_id` (`product_id`);
@@ -1193,7 +1179,6 @@ ALTER TABLE `messages`
 -- Chỉ mục cho bảng `otp_verification`
 --
 ALTER TABLE `otp_verification`
-  ADD PRIMARY KEY (`id`),
   ADD KEY `email` (`email`),
   ADD KEY `phone` (`phone`);
 
@@ -1207,7 +1192,6 @@ ALTER TABLE `parent_categories`
 -- Chỉ mục cho bảng `posting_fee_history`
 --
 ALTER TABLE `posting_fee_history`
-  ADD PRIMARY KEY (`id`),
   ADD KEY `product_id` (`product_id`),
   ADD KEY `user_id` (`user_id`);
 
@@ -1215,7 +1199,6 @@ ALTER TABLE `posting_fee_history`
 -- Chỉ mục cho bảng `products`
 --
 ALTER TABLE `products`
-  ADD PRIMARY KEY (`id`),
   ADD KEY `user_id` (`user_id`),
   ADD KEY `category_id` (`category_id`),
   ADD KEY `idx_stock_quantity` (`stock_quantity`),
@@ -1225,14 +1208,12 @@ ALTER TABLE `products`
 -- Chỉ mục cho bảng `product_categories`
 --
 ALTER TABLE `product_categories`
-  ADD PRIMARY KEY (`id`),
   ADD KEY `parent_category_id` (`parent_category_id`);
 
 --
 -- Chỉ mục cho bảng `promotion_history`
 --
 ALTER TABLE `promotion_history`
-  ADD PRIMARY KEY (`id`),
   ADD KEY `product_id` (`product_id`),
   ADD KEY `user_id` (`user_id`);
 
@@ -1240,7 +1221,6 @@ ALTER TABLE `promotion_history`
 -- Chỉ mục cho bảng `reviews`
 --
 ALTER TABLE `reviews`
-  ADD PRIMARY KEY (`id`),
   ADD KEY `reviewer_id` (`reviewer_id`),
   ADD KEY `reviewed_user_id` (`reviewed_user_id`),
   ADD KEY `product_id` (`product_id`),
@@ -1259,7 +1239,6 @@ ALTER TABLE `roles`
 -- Chỉ mục cho bảng `transactions`
 --
 ALTER TABLE `transactions`
-  ADD PRIMARY KEY (`id`),
   ADD KEY `idx_user_id` (`user_id`),
   ADD KEY `idx_account_id` (`account_id`),
   ADD KEY `idx_status` (`status`);
@@ -1268,21 +1247,18 @@ ALTER TABLE `transactions`
 -- Chỉ mục cho bảng `transfer_accounts`
 --
 ALTER TABLE `transfer_accounts`
-  ADD PRIMARY KEY (`id`),
   ADD KEY `user_id` (`user_id`);
 
 --
 -- Chỉ mục cho bảng `transfer_history`
 --
 ALTER TABLE `transfer_history`
-  ADD PRIMARY KEY (`history_id`),
   ADD KEY `user_id` (`user_id`);
 
 --
 -- Chỉ mục cho bảng `users`
 --
 ALTER TABLE `users`
-  ADD PRIMARY KEY (`id`),
   ADD UNIQUE KEY `email` (`email`),
   ADD UNIQUE KEY `idx_email` (`email`),
   ADD UNIQUE KEY `idx_phone` (`phone`),
@@ -1292,7 +1268,6 @@ ALTER TABLE `users`
 -- Chỉ mục cho bảng `vnpay_transactions`
 --
 ALTER TABLE `vnpay_transactions`
-  ADD PRIMARY KEY (`id`),
   ADD UNIQUE KEY `txn_ref` (`txn_ref`),
   ADD KEY `idx_user_id` (`user_id`),
   ADD KEY `idx_txn_ref` (`txn_ref`),
