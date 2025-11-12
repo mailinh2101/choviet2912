@@ -13,11 +13,24 @@ class Connect {
         $dbPass = getenv('DB_PASS') ?: '123456';
         $dbName = getenv('DB_NAME') ?: 'choviet29';
 
-        // Try to connect using mysqli; include port if provided
-        if (!empty($dbPort)) {
-            $con = mysqli_connect($dbHost, $dbUser, $dbPass, $dbName, (int)$dbPort);
-        } else {
-            $con = mysqli_connect($dbHost, $dbUser, $dbPass, $dbName);
+        // If a port is specified and the host is 'localhost', force TCP by using 127.0.0.1
+        // This avoids issues where mysqli attempts a Unix socket that doesn't exist
+        $connectHost = $dbHost;
+        if ($dbHost === 'localhost' && !empty($dbPort)) {
+            $connectHost = '127.0.0.1';
+        }
+
+        // Try to connect using mysqli; include port if provided. Catch exceptions to log details.
+        try {
+            if (!empty($dbPort)) {
+                $con = mysqli_connect($connectHost, $dbUser, $dbPass, $dbName, (int)$dbPort);
+            } else {
+                $con = mysqli_connect($connectHost, $dbUser, $dbPass, $dbName);
+            }
+        } catch (mysqli_sql_exception $e) {
+            error_log("Database Connection Exception: " . $e->getMessage());
+            echo "Lỗi kết nối cơ sở dữ liệu: " . $e->getMessage();
+            exit();
         }
 
         if (!$con) {
