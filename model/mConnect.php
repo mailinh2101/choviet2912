@@ -6,8 +6,23 @@ class Connect {
             date_default_timezone_set('Asia/Ho_Chi_Minh');
         }
 
-        $con = mysqli_connect("localhost", "admin", "123456", "choviet29");
+        // Read DB config from environment variables with fallbacks to defaults
+        $dbHost = getenv('DB_HOST') ?: 'localhost';
+        $dbPort = getenv('DB_PORT') ?: '';
+        $dbUser = getenv('DB_USER') ?: 'admin';
+        $dbPass = getenv('DB_PASS') ?: '123456';
+        $dbName = getenv('DB_NAME') ?: 'choviet29';
+
+        // Try to connect using mysqli; include port if provided
+        if (!empty($dbPort)) {
+            $con = mysqli_connect($dbHost, $dbUser, $dbPass, $dbName, (int)$dbPort);
+        } else {
+            $con = mysqli_connect($dbHost, $dbUser, $dbPass, $dbName);
+        }
+
         if (!$con) {
+            // Use error_log instead of echo in production; keep echo for backward compatibility
+            error_log("Database Connection Error: " . mysqli_connect_error());
             echo "Lỗi kết nối cơ sở dữ liệu: " . mysqli_connect_error();
             exit();
         } else {
