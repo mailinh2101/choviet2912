@@ -1,3 +1,9 @@
+-- Fixed for DigitalOcean MySQL
+SET sql_require_primary_key=0;
+SET @OLD_UNIQUE_CHECKS=@@UNIQUE_CHECKS, UNIQUE_CHECKS=0;
+SET @OLD_FOREIGN_KEY_CHECKS=@@FOREIGN_KEY_CHECKS, FOREIGN_KEY_CHECKS=0;
+SET @OLD_SQL_MODE=@@SQL_MODE, SQL_MODE='NO_AUTO_VALUE_ON_ZERO';
+
 -- phpMyAdmin SQL Dump
 -- version 5.2.1
 -- https://www.phpmyadmin.net/
@@ -25,7 +31,7 @@ DELIMITER $$
 --
 -- Thủ tục
 --
-CREATE DEFINER=`root`@`localhost` PROCEDURE `check_review_permission` (IN `p_reviewer_id` INT, IN `p_reviewed_user_id` INT, IN `p_product_id` INT, IN `p_order_type` ENUM('livestream','c2c','direct'), IN `p_order_id` INT, OUT `can_review` TINYINT, OUT `reason` VARCHAR(255))   BEGIN
+CREATE PROCEDURE `check_review_permission` (IN `p_reviewer_id` INT, IN `p_reviewed_user_id` INT, IN `p_product_id` INT, IN `p_order_type` ENUM('livestream','c2c','direct'), IN `p_order_id` INT, OUT `can_review` TINYINT, OUT `reason` VARCHAR(255))   BEGIN
     DECLARE v_existing_review INT DEFAULT 0;
     DECLARE v_order_status VARCHAR(50);
     DECLARE v_buyer_id INT;
@@ -85,7 +91,7 @@ CREATE DEFINER=`root`@`localhost` PROCEDURE `check_review_permission` (IN `p_rev
     END IF;
 END$$
 
-CREATE DEFINER=`root`@`localhost` PROCEDURE `update_product_stock` (IN `p_product_id` INT, IN `p_quantity_change` INT, IN `p_change_type` ENUM('sale','return','restock','adjustment','initial'), IN `p_note` TEXT, IN `p_created_by` INT, IN `p_order_id` INT)   BEGIN
+CREATE PROCEDURE `update_product_stock` (IN `p_product_id` INT, IN `p_quantity_change` INT, IN `p_change_type` ENUM('sale','return','restock','adjustment','initial'), IN `p_note` TEXT, IN `p_created_by` INT, IN `p_order_id` INT)   BEGIN
     DECLARE v_old_quantity INT;
     DECLARE v_new_quantity INT;
     DECLARE v_track_inventory TINYINT;
@@ -150,7 +156,7 @@ DELIMITER ;
 --
 
 CREATE TABLE `banners` (
-  `id` int(11) NOT NULL,
+  `id` int(11) NOT NULL PRIMARY KEY AUTO_INCREMENT,
   `title` varchar(255) NOT NULL,
   `description` text DEFAULT NULL,
   `image_url` varchar(500) NOT NULL,
@@ -158,8 +164,8 @@ CREATE TABLE `banners` (
   `button_link` varchar(500) DEFAULT NULL,
   `display_order` int(11) DEFAULT 1,
   `status` enum('active','inactive') DEFAULT 'active',
-  `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
-  `updated_at` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
+  `created_at` timestamp NOT NULL ,
+  `updated_at` timestamp NOT NULL  ON UPDATE CURRENT_TIMESTAMP
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
@@ -180,7 +186,7 @@ INSERT INTO `banners` (`id`, `title`, `description`, `image_url`, `button_text`,
 --
 
 CREATE TABLE `inventory_history` (
-  `id` int(11) NOT NULL,
+  `id` int(11) NOT NULL PRIMARY KEY AUTO_INCREMENT,
   `product_id` int(11) NOT NULL COMMENT 'ID sản phẩm',
   `order_id` int(11) DEFAULT NULL COMMENT 'ID đơn hàng (nếu có)',
   `change_type` enum('sale','return','restock','adjustment','initial') NOT NULL COMMENT 'Loại biến động: sale=bán, return=trả hàng, restock=nhập thêm, adjustment=điều chỉnh, initial=khởi tạo',
@@ -189,7 +195,7 @@ CREATE TABLE `inventory_history` (
   `new_quantity` int(11) NOT NULL COMMENT 'Số lượng sau khi thay đổi',
   `note` text DEFAULT NULL COMMENT 'Ghi chú',
   `created_by` int(11) DEFAULT NULL COMMENT 'Người thực hiện',
-  `created_at` datetime NOT NULL DEFAULT current_timestamp()
+  `created_at` datetime NOT NULL 
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci COMMENT='Lịch sử biến động tồn kho';
 
 -- --------------------------------------------------------
@@ -199,7 +205,7 @@ CREATE TABLE `inventory_history` (
 --
 
 CREATE TABLE `livestream` (
-  `id` int(11) NOT NULL,
+  `id` int(11) NOT NULL PRIMARY KEY AUTO_INCREMENT,
   `user_id` int(11) NOT NULL,
   `title` varchar(255) NOT NULL,
   `description` text DEFAULT NULL,
@@ -207,7 +213,7 @@ CREATE TABLE `livestream` (
   `end_time` datetime DEFAULT NULL,
   `status` varchar(20) NOT NULL DEFAULT 'chua_bat_dau' COMMENT 'chua_bat_dau, dang_dien_ra, da_ket_thuc',
   `image` varchar(255) DEFAULT NULL,
-  `created_date` datetime NOT NULL DEFAULT current_timestamp(),
+  `created_date` datetime NOT NULL ,
   `room_id` varchar(50) DEFAULT NULL COMMENT 'ID phòng livestream',
   `stream_key` varchar(100) DEFAULT NULL COMMENT 'Stream key cho RTMP',
   `viewer_count` int(11) DEFAULT 0 COMMENT 'Số lượng người xem',
@@ -249,14 +255,14 @@ INSERT INTO `livestream` (`id`, `user_id`, `title`, `description`, `start_time`,
 --
 
 CREATE TABLE `livestream_cart_items` (
-  `id` int(11) NOT NULL,
+  `id` int(11) NOT NULL PRIMARY KEY AUTO_INCREMENT,
   `user_id` int(11) NOT NULL,
   `livestream_id` int(11) NOT NULL,
   `product_id` int(11) NOT NULL,
   `quantity` int(11) NOT NULL DEFAULT 1,
   `price` decimal(10,2) NOT NULL,
-  `added_at` datetime DEFAULT current_timestamp(),
-  `created_at` datetime DEFAULT current_timestamp()
+  `added_at` datetime ,
+  `created_at` datetime 
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
@@ -276,11 +282,11 @@ INSERT INTO `livestream_cart_items` (`id`, `user_id`, `livestream_id`, `product_
 --
 
 CREATE TABLE `livestream_interactions` (
-  `id` int(11) NOT NULL,
+  `id` int(11) NOT NULL PRIMARY KEY AUTO_INCREMENT,
   `livestream_id` int(11) NOT NULL,
   `user_id` int(11) NOT NULL,
   `action_type` enum('like','share','follow','purchase','view') NOT NULL,
-  `created_at` datetime DEFAULT current_timestamp()
+  `created_at` datetime 
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 -- --------------------------------------------------------
@@ -290,11 +296,11 @@ CREATE TABLE `livestream_interactions` (
 --
 
 CREATE TABLE `livestream_messages` (
-  `id` int(11) NOT NULL,
+  `id` int(11) NOT NULL PRIMARY KEY AUTO_INCREMENT,
   `livestream_id` int(11) NOT NULL,
   `user_id` int(11) NOT NULL,
   `content` text NOT NULL,
-  `created_time` datetime NOT NULL DEFAULT current_timestamp(),
+  `created_time` datetime NOT NULL ,
   `message_type` enum('text','product_pin','order_placed') DEFAULT 'text' COMMENT 'Loại tin nhắn',
   `product_id` int(11) DEFAULT NULL COMMENT 'ID sản phẩm nếu liên quan',
   `is_system_message` tinyint(1) DEFAULT 0 COMMENT 'Tin nhắn hệ thống'
@@ -316,7 +322,7 @@ INSERT INTO `livestream_messages` (`id`, `livestream_id`, `user_id`, `content`, 
 --
 
 CREATE TABLE `livestream_orders` (
-  `id` int(11) NOT NULL,
+  `id` int(11) NOT NULL PRIMARY KEY AUTO_INCREMENT,
   `order_code` varchar(20) NOT NULL,
   `user_id` int(11) NOT NULL,
   `livestream_id` int(11) NOT NULL,
@@ -324,8 +330,8 @@ CREATE TABLE `livestream_orders` (
   `status` enum('pending','confirmed','shipped','delivered','cancelled') DEFAULT 'pending',
   `payment_method` varchar(50) DEFAULT NULL,
   `vnpay_txn_ref` varchar(50) DEFAULT NULL,
-  `created_at` datetime DEFAULT current_timestamp(),
-  `updated_at` datetime DEFAULT current_timestamp() ON UPDATE current_timestamp(),
+  `created_at` datetime ,
+  `updated_at` datetime  ON UPDATE CURRENT_TIMESTAMP,
   `delivery_name` varchar(255) DEFAULT NULL,
   `delivery_phone` varchar(20) DEFAULT NULL,
   `delivery_province` varchar(255) DEFAULT NULL,
@@ -350,12 +356,12 @@ INSERT INTO `livestream_orders` (`id`, `order_code`, `user_id`, `livestream_id`,
 --
 
 CREATE TABLE `livestream_order_items` (
-  `id` int(11) NOT NULL,
+  `id` int(11) NOT NULL PRIMARY KEY AUTO_INCREMENT,
   `order_id` int(11) NOT NULL,
   `product_id` int(11) NOT NULL,
   `quantity` int(11) NOT NULL,
   `price` decimal(10,2) NOT NULL,
-  `created_at` datetime DEFAULT current_timestamp()
+  `created_at` datetime 
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
@@ -417,7 +423,7 @@ DELIMITER ;
 --
 
 CREATE TABLE `livestream_packages` (
-  `id` int(11) NOT NULL,
+  `id` int(11) NOT NULL PRIMARY KEY AUTO_INCREMENT,
   `package_name` varchar(100) NOT NULL,
   `description` text DEFAULT NULL,
   `price` decimal(10,2) NOT NULL,
@@ -441,7 +447,7 @@ INSERT INTO `livestream_packages` (`id`, `package_name`, `description`, `price`,
 --
 
 CREATE TABLE `livestream_payment_history` (
-  `id` int(11) NOT NULL,
+  `id` int(11) NOT NULL PRIMARY KEY AUTO_INCREMENT,
   `user_id` int(11) NOT NULL COMMENT 'ID người dùng',
   `registration_id` int(11) DEFAULT NULL COMMENT 'ID đăng ký gói',
   `package_id` int(11) NOT NULL COMMENT 'ID gói livestream',
@@ -449,8 +455,8 @@ CREATE TABLE `livestream_payment_history` (
   `payment_method` varchar(50) NOT NULL COMMENT 'Phương thức thanh toán: vnpay, wallet',
   `payment_status` enum('pending','success','failed') NOT NULL DEFAULT 'pending' COMMENT 'Trạng thái thanh toán',
   `vnpay_txn_ref` varchar(100) DEFAULT NULL COMMENT 'Mã giao dịch VNPay',
-  `payment_date` datetime NOT NULL DEFAULT current_timestamp() COMMENT 'Ngày thanh toán',
-  `created_at` timestamp NOT NULL DEFAULT current_timestamp()
+  `payment_date` datetime NOT NULL  COMMENT 'Ngày thanh toán',
+  `created_at` timestamp NOT NULL 
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci COMMENT='Lịch sử thanh toán gói livestream';
 
 --
@@ -468,16 +474,16 @@ INSERT INTO `livestream_payment_history` (`id`, `user_id`, `registration_id`, `p
 --
 
 CREATE TABLE `livestream_products` (
-  `id` int(11) NOT NULL,
+  `id` int(11) NOT NULL PRIMARY KEY AUTO_INCREMENT,
   `livestream_id` int(11) NOT NULL,
   `product_id` int(11) NOT NULL,
   `order_sequence` int(11) NOT NULL DEFAULT 0,
-  `created_date` datetime NOT NULL DEFAULT current_timestamp(),
+  `created_date` datetime NOT NULL ,
   `is_pinned` tinyint(1) DEFAULT 0 COMMENT 'Sản phẩm được ghim',
   `pinned_at` datetime DEFAULT NULL,
   `special_price` decimal(10,2) DEFAULT NULL COMMENT 'Giá đặc biệt trong live',
   `stock_quantity` int(11) DEFAULT NULL COMMENT 'Số lượng còn lại',
-  `created_at` datetime DEFAULT current_timestamp()
+  `created_at` datetime 
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
@@ -521,16 +527,16 @@ INSERT INTO `livestream_products` (`id`, `livestream_id`, `product_id`, `order_s
 --
 
 CREATE TABLE `livestream_registrations` (
-  `id` int(11) NOT NULL,
+  `id` int(11) NOT NULL PRIMARY KEY AUTO_INCREMENT,
   `user_id` int(11) NOT NULL COMMENT 'ID người dùng',
   `package_id` int(11) NOT NULL COMMENT 'ID gói livestream',
-  `registration_date` datetime NOT NULL DEFAULT current_timestamp() COMMENT 'Ngày đăng ký',
+  `registration_date` datetime NOT NULL  COMMENT 'Ngày đăng ký',
   `expiry_date` datetime NOT NULL COMMENT 'Ngày hết hạn',
   `status` enum('active','expired','cancelled') NOT NULL DEFAULT 'active' COMMENT 'Trạng thái: active=đang dùng, expired=hết hạn, cancelled=đã hủy',
   `payment_method` varchar(50) DEFAULT NULL COMMENT 'Phương thức thanh toán',
   `vnpay_txn_ref` varchar(100) DEFAULT NULL COMMENT 'Mã giao dịch VNPay (nếu có)',
-  `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
-  `updated_at` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
+  `created_at` timestamp NOT NULL ,
+  `updated_at` timestamp NOT NULL  ON UPDATE CURRENT_TIMESTAMP
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci COMMENT='Quản lý đăng ký gói livestream của người dùng';
 
 --
@@ -548,11 +554,11 @@ INSERT INTO `livestream_registrations` (`id`, `user_id`, `package_id`, `registra
 --
 
 CREATE TABLE `livestream_viewers` (
-  `id` int(11) NOT NULL,
+  `id` int(11) NOT NULL PRIMARY KEY AUTO_INCREMENT,
   `livestream_id` int(11) NOT NULL,
   `user_id` int(11) NOT NULL,
-  `joined_at` datetime DEFAULT current_timestamp(),
-  `last_activity` datetime DEFAULT current_timestamp() ON UPDATE current_timestamp()
+  `joined_at` datetime ,
+  `last_activity` datetime  ON UPDATE CURRENT_TIMESTAMP
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
@@ -570,13 +576,13 @@ INSERT INTO `livestream_viewers` (`id`, `livestream_id`, `user_id`, `joined_at`,
 --
 
 CREATE TABLE `messages` (
-  `id` int(11) NOT NULL,
+  `id` int(11) NOT NULL PRIMARY KEY AUTO_INCREMENT,
   `sender_id` int(11) NOT NULL,
   `receiver_id` int(11) NOT NULL,
   `product_id` int(11) NOT NULL,
   `content` text NOT NULL,
-  `created_date` date DEFAULT curdate(),
-  `created_time` datetime DEFAULT current_timestamp(),
+  `created_date` date ,
+  `created_time` datetime ,
   `is_read` tinyint(1) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
@@ -596,11 +602,11 @@ INSERT INTO `messages` (`id`, `sender_id`, `receiver_id`, `product_id`, `content
 --
 
 CREATE TABLE `otp_verification` (
-  `id` int(11) NOT NULL,
+  `id` int(11) NOT NULL PRIMARY KEY AUTO_INCREMENT,
   `email` varchar(255) DEFAULT NULL,
   `phone` varchar(20) DEFAULT NULL,
   `otp` varchar(6) NOT NULL,
-  `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
+  `created_at` timestamp NOT NULL ,
   `expires_at` timestamp NOT NULL DEFAULT '0000-00-00 00:00:00',
   `verified` tinyint(1) DEFAULT 0
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
@@ -621,7 +627,7 @@ INSERT INTO `otp_verification` (`id`, `email`, `phone`, `otp`, `created_at`, `ex
 --
 
 CREATE TABLE `parent_categories` (
-  `parent_category_id` int(11) NOT NULL,
+  `parent_category_id` int(11) NOT NULL PRIMARY KEY AUTO_INCREMENT,
   `parent_category_name` varchar(100) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
@@ -650,11 +656,11 @@ INSERT INTO `parent_categories` (`parent_category_id`, `parent_category_name`) V
 --
 
 CREATE TABLE `posting_fee_history` (
-  `id` int(11) NOT NULL,
+  `id` int(11) NOT NULL PRIMARY KEY AUTO_INCREMENT,
   `product_id` int(11) NOT NULL,
   `user_id` int(11) NOT NULL,
   `amount` decimal(10,2) NOT NULL,
-  `created_date` date DEFAULT curdate()
+  `created_date` date 
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
@@ -673,7 +679,7 @@ INSERT INTO `posting_fee_history` (`id`, `product_id`, `user_id`, `amount`, `cre
 --
 
 CREATE TABLE `products` (
-  `id` int(11) NOT NULL,
+  `id` int(11) NOT NULL PRIMARY KEY AUTO_INCREMENT,
   `user_id` int(11) NOT NULL,
   `category_id` int(11) NOT NULL,
   `title` varchar(255) NOT NULL,
@@ -682,8 +688,8 @@ CREATE TABLE `products` (
   `image` varchar(255) DEFAULT NULL,
   `status` varchar(20) DEFAULT 'cho_duyet',
   `sale_status` varchar(50) NOT NULL,
-  `created_date` datetime DEFAULT current_timestamp(),
-  `updated_date` datetime DEFAULT current_timestamp(),
+  `created_date` datetime ,
+  `updated_date` datetime ,
   `note` varchar(255) NOT NULL,
   `stock_quantity` int(11) DEFAULT NULL COMMENT 'Số lượng tồn kho (NULL = không giới hạn, cho sản phẩm C2C)',
   `is_livestream_product` tinyint(1) DEFAULT 0 COMMENT '1 = Sản phẩm livestream (có quản lý kho), 0 = Sản phẩm C2C thường',
@@ -711,7 +717,7 @@ INSERT INTO `products` (`id`, `user_id`, `category_id`, `title`, `description`, 
 --
 
 CREATE TABLE `product_categories` (
-  `id` int(11) NOT NULL,
+  `id` int(11) NOT NULL PRIMARY KEY AUTO_INCREMENT,
   `category_name` varchar(100) NOT NULL,
   `parent_category_id` int(11) DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
@@ -791,11 +797,11 @@ INSERT INTO `product_categories` (`id`, `category_name`, `parent_category_id`) V
 --
 
 CREATE TABLE `promotion_history` (
-  `id` int(11) NOT NULL,
+  `id` int(11) NOT NULL PRIMARY KEY AUTO_INCREMENT,
   `product_id` int(11) NOT NULL,
   `user_id` int(11) NOT NULL,
   `amount` decimal(10,2) NOT NULL,
-  `promotion_time` datetime NOT NULL DEFAULT current_timestamp()
+  `promotion_time` datetime NOT NULL 
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
@@ -814,13 +820,13 @@ INSERT INTO `promotion_history` (`id`, `product_id`, `user_id`, `amount`, `promo
 --
 
 CREATE TABLE `reviews` (
-  `id` int(11) NOT NULL,
+  `id` int(11) NOT NULL PRIMARY KEY AUTO_INCREMENT,
   `reviewer_id` int(11) NOT NULL,
   `reviewed_user_id` int(11) NOT NULL,
   `product_id` int(11) NOT NULL,
   `rating` int(11) DEFAULT NULL CHECK (`rating` >= 1 and `rating` <= 5),
   `comment` varchar(1000) DEFAULT NULL,
-  `created_date` date DEFAULT curdate(),
+  `created_date` date ,
   `livestream_order_id` int(11) DEFAULT NULL COMMENT 'ID đơn hàng livestream (nếu có)',
   `c2c_order_id` int(11) DEFAULT NULL COMMENT 'ID đơn hàng C2C (nếu có)',
   `order_type` enum('livestream','c2c','direct') DEFAULT 'direct' COMMENT 'Loại đơn hàng: livestream, c2c, hoặc direct (review trực tiếp không qua đơn)',
@@ -843,7 +849,7 @@ INSERT INTO `reviews` (`id`, `reviewer_id`, `reviewed_user_id`, `product_id`, `r
 --
 
 CREATE TABLE `roles` (
-  `id` int(11) NOT NULL,
+  `id` int(11) NOT NULL PRIMARY KEY AUTO_INCREMENT,
   `role_name` varchar(50) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
@@ -865,7 +871,7 @@ INSERT INTO `roles` (`id`, `role_name`) VALUES
 --
 
 CREATE TABLE `transactions` (
-  `id` int(11) NOT NULL,
+  `id` int(11) NOT NULL PRIMARY KEY AUTO_INCREMENT,
   `transaction_id` varchar(50) NOT NULL,
   `user_id` int(11) NOT NULL,
   `account_id` int(11) NOT NULL,
@@ -886,7 +892,7 @@ CREATE TABLE `transactions` (
 --
 
 CREATE TABLE `transfer_accounts` (
-  `id` int(11) NOT NULL,
+  `id` int(11) NOT NULL PRIMARY KEY AUTO_INCREMENT,
   `account_number` int(11) NOT NULL,
   `user_id` int(11) NOT NULL,
   `balance` int(11) NOT NULL
@@ -908,7 +914,7 @@ INSERT INTO `transfer_accounts` (`id`, `account_number`, `user_id`, `balance`) V
 --
 
 CREATE TABLE `transfer_history` (
-  `history_id` int(11) NOT NULL,
+  `history_id` int(11) NOT NULL PRIMARY KEY AUTO_INCREMENT,
   `user_id` int(11) NOT NULL,
   `transfer_content` varchar(255) NOT NULL,
   `transfer_image` varchar(255) NOT NULL,
@@ -932,7 +938,7 @@ INSERT INTO `transfer_history` (`history_id`, `user_id`, `transfer_content`, `tr
 --
 
 CREATE TABLE `users` (
-  `id` int(11) NOT NULL,
+  `id` int(11) NOT NULL PRIMARY KEY AUTO_INCREMENT,
   `username` varchar(50) NOT NULL,
   `email` varchar(100) NOT NULL,
   `password` varchar(255) NOT NULL,
@@ -943,8 +949,8 @@ CREATE TABLE `users` (
   `business_verified` tinyint(1) NOT NULL DEFAULT 0 COMMENT 'Tài khoản doanh nghiệp đã xác minh',
   `avatar` varchar(255) DEFAULT NULL,
   `birth_date` date DEFAULT NULL,
-  `created_date` date DEFAULT current_timestamp(),
-  `updated_date` datetime NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp(),
+  `created_date` date ,
+  `updated_date` datetime NOT NULL  ON UPDATE CURRENT_TIMESTAMP,
   `is_active` tinyint(1) NOT NULL,
   `is_verified` tinyint(1) DEFAULT 0,
   `balance` decimal(15,2) DEFAULT 0.00
@@ -968,14 +974,14 @@ INSERT INTO `users` (`id`, `username`, `email`, `password`, `phone`, `address`, 
 --
 
 CREATE TABLE `vnpay_transactions` (
-  `id` int(11) NOT NULL,
+  `id` int(11) NOT NULL PRIMARY KEY AUTO_INCREMENT,
   `txn_ref` varchar(100) NOT NULL,
   `user_id` int(11) NOT NULL,
   `amount` decimal(15,2) NOT NULL,
   `status` enum('pending','success','failed') DEFAULT 'pending',
   `vnpay_response_code` varchar(10) DEFAULT NULL,
-  `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
-  `updated_at` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
+  `created_at` timestamp NOT NULL ,
+  `updated_at` timestamp NOT NULL  ON UPDATE CURRENT_TIMESTAMP
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
@@ -1042,7 +1048,7 @@ CREATE TABLE `v_seller_ratings` (
 --
 DROP TABLE IF EXISTS `v_inventory_report`;
 
-CREATE ALGORITHM=UNDEFINED DEFINER=`root`@`localhost` SQL SECURITY DEFINER VIEW `v_inventory_report`  AS SELECT `p`.`id` AS `product_id`, `p`.`title` AS `product_name`, `p`.`price` AS `price`, `p`.`stock_quantity` AS `stock_quantity`, `p`.`low_stock_alert` AS `low_stock_alert`, `p`.`is_livestream_product` AS `is_livestream_product`, `p`.`track_inventory` AS `track_inventory`, `p`.`user_id` AS `seller_id`, `u`.`username` AS `seller_name`, CASE WHEN `p`.`stock_quantity` is null THEN 'Không giới hạn' WHEN `p`.`stock_quantity` = 0 THEN 'Hết hàng' WHEN `p`.`stock_quantity` <= `p`.`low_stock_alert` THEN 'Sắp hết' ELSE 'Còn hàng' END AS `stock_status`, coalesce((select sum(`livestream_order_items`.`quantity`) from `livestream_order_items` where `livestream_order_items`.`product_id` = `p`.`id`),0) AS `total_sold` FROM (`products` `p` join `users` `u` on(`p`.`user_id` = `u`.`id`)) WHERE `p`.`is_livestream_product` = 1 ORDER BY `p`.`stock_quantity` ASC, `p`.`title` ASC ;
+CREATE ALGORITHM=UNDEFINED DEFINER=`root`@`localhost` VIEW `v_inventory_report`  AS SELECT `p`.`id` AS `product_id`, `p`.`title` AS `product_name`, `p`.`price` AS `price`, `p`.`stock_quantity` AS `stock_quantity`, `p`.`low_stock_alert` AS `low_stock_alert`, `p`.`is_livestream_product` AS `is_livestream_product`, `p`.`track_inventory` AS `track_inventory`, `p`.`user_id` AS `seller_id`, `u`.`username` AS `seller_name`, CASE WHEN `p`.`stock_quantity` is null THEN 'Không giới hạn' WHEN `p`.`stock_quantity` = 0 THEN 'Hết hàng' WHEN `p`.`stock_quantity` <= `p`.`low_stock_alert` THEN 'Sắp hết' ELSE 'Còn hàng' END AS `stock_status`, coalesce((select sum(`livestream_order_items`.`quantity`) from `livestream_order_items` where `livestream_order_items`.`product_id` = `p`.`id`),0) AS `total_sold` FROM (`products` `p` join `users` `u` on(`p`.`user_id` = `u`.`id`)) WHERE `p`.`is_livestream_product` = 1 ORDER BY `p`.`stock_quantity` ASC, `p`.`title` ASC ;
 
 -- --------------------------------------------------------
 
@@ -1051,7 +1057,7 @@ CREATE ALGORITHM=UNDEFINED DEFINER=`root`@`localhost` SQL SECURITY DEFINER VIEW 
 --
 DROP TABLE IF EXISTS `v_seller_ratings`;
 
-CREATE ALGORITHM=UNDEFINED DEFINER=`root`@`localhost` SQL SECURITY DEFINER VIEW `v_seller_ratings`  AS SELECT `u`.`id` AS `seller_id`, `u`.`username` AS `seller_name`, count(`r`.`id`) AS `total_reviews`, coalesce(avg(`r`.`rating`),0) AS `avg_rating`, sum(case when `r`.`rating` = 5 then 1 else 0 end) AS `five_star_count`, sum(case when `r`.`rating` = 4 then 1 else 0 end) AS `four_star_count`, sum(case when `r`.`rating` = 3 then 1 else 0 end) AS `three_star_count`, sum(case when `r`.`rating` = 2 then 1 else 0 end) AS `two_star_count`, sum(case when `r`.`rating` = 1 then 1 else 0 end) AS `one_star_count`, sum(case when `r`.`is_verified_purchase` = 1 then 1 else 0 end) AS `verified_reviews_count` FROM (`users` `u` left join `reviews` `r` on(`u`.`id` = `r`.`reviewed_user_id`)) GROUP BY `u`.`id`, `u`.`username` ;
+CREATE ALGORITHM=UNDEFINED DEFINER=`root`@`localhost` VIEW `v_seller_ratings`  AS SELECT `u`.`id` AS `seller_id`, `u`.`username` AS `seller_name`, count(`r`.`id`) AS `total_reviews`, coalesce(avg(`r`.`rating`),0) AS `avg_rating`, sum(case when `r`.`rating` = 5 then 1 else 0 end) AS `five_star_count`, sum(case when `r`.`rating` = 4 then 1 else 0 end) AS `four_star_count`, sum(case when `r`.`rating` = 3 then 1 else 0 end) AS `three_star_count`, sum(case when `r`.`rating` = 2 then 1 else 0 end) AS `two_star_count`, sum(case when `r`.`rating` = 1 then 1 else 0 end) AS `one_star_count`, sum(case when `r`.`is_verified_purchase` = 1 then 1 else 0 end) AS `verified_reviews_count` FROM (`users` `u` left join `reviews` `r` on(`u`.`id` = `r`.`reviewed_user_id`)) GROUP BY `u`.`id`, `u`.`username` ;
 
 --
 -- Chỉ mục cho các bảng đã đổ
@@ -1622,3 +1628,9 @@ COMMIT;
 /*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;
 /*!40101 SET CHARACTER_SET_RESULTS=@OLD_CHARACTER_SET_RESULTS */;
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
+
+-- Restore settings
+SET sql_require_primary_key=1;
+SET SQL_MODE=@OLD_SQL_MODE;
+SET FOREIGN_KEY_CHECKS=@OLD_FOREIGN_KEY_CHECKS;
+SET UNIQUE_CHECKS=@OLD_UNIQUE_CHECKS;
