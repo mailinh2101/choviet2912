@@ -20,16 +20,33 @@ class Connect {
             $connectHost = '127.0.0.1';
         }
 
-        // Try to connect using mysqli; include port if provided. Catch exceptions to log details.
+        // Use mysqli_init + mysqli_real_connect so we can set a connection timeout and
+        // avoid long blocking when the DB is unreachable.
+        $mysqli = mysqli_init();
+        // Set low connect timeout (seconds)
+        if (defined('MYSQLI_OPT_CONNECT_TIMEOUT')) {
+            mysqli_options($mysqli, MYSQLI_OPT_CONNECT_TIMEOUT, 5);
+        }
+
+        // Optional: set SSL mode if DB_SSLMODE=REQUIRED (handled later if needed)
+
+        $connected = false;
         try {
             if (!empty($dbPort)) {
-                $con = mysqli_connect($connectHost, $dbUser, $dbPass, $dbName, (int)$dbPort);
+                $connected = @mysqli_real_connect($mysqli, $connectHost, $dbUser, $dbPass, $dbName, (int)$dbPort);
             } else {
-                $con = mysqli_connect($connectHost, $dbUser, $dbPass, $dbName);
+                $connected = @mysqli_real_connect($mysqli, $connectHost, $dbUser, $dbPass, $dbName);
             }
-        } catch (mysqli_sql_exception $e) {
-            error_log("Database Connection Exception: " . $e->getMessage());
-            echo "Lỗi kết nối cơ sở dữ liệu: " . $e->getMessage();
+        } catch (Throwable $e) {
+            error_log("Database Connection Throwable: " . $e->getMessage());
+        }
+
+        if ($connected) {
+            $con = $mysqli;
+        } else {
+            $err = mysqli_connect_error();
+            error_log("Database Connection Error: " . $err);
+            echo "Lỗi kết nối cơ sở dữ liệu: " . $err;
             exit();
         }
 
