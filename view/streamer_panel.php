@@ -678,6 +678,20 @@ const userId = <?= $_SESSION['user_id'] ?>;
 // WebSocket connection
 let liveSocket = null;
 
+// WebSocket URL helper function
+function getWebSocketURL() {
+    const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+    const hostname = window.location.hostname;
+    
+    // Development (localhost)
+    if (hostname === 'localhost' || hostname === '127.0.0.1') {
+        return 'ws://localhost:3000';
+    }
+    
+    // Production (Nginx reverse proxy)
+    return `${protocol}//${hostname}/ws/`;
+}
+
 document.addEventListener('DOMContentLoaded', function() {
     connectWebSocket();
     loadProducts();
@@ -688,8 +702,7 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 
 function connectWebSocket() {
-    const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-    const wsUrl = `${protocol}//${window.location.hostname}:3000/livestream`;
+    const wsUrl = getWebSocketURL();
     
     liveSocket = new WebSocket(wsUrl);
     

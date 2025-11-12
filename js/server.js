@@ -11,16 +11,36 @@ let livestreamRooms = {};
 let CONFIG = {
   hostname: process.env.HOSTNAME || 'localhost',
   port: process.env.PORT || 8080,
-  basePath: process.env.BASE_PATH || '/choviet29' // Có thể thay đổi qua environment variable
+  basePath: process.env.BASE_PATH || '/choviet29'
 };
 
 console.log("🟡 Đang chạy đúng file server.js JSON");
 console.log("🔍 Current working directory:", process.cwd());
+console.log("🔍 Environment:", process.env.NODE_ENV || 'development');
 console.log("🔍 CONFIG loaded:", CONFIG);
+
+// Detect App Platform environment
+const isAppPlatform = process.env.APP_PLATFORM === 'true' || 
+                      process.cwd().includes('/workspace') ||
+                      fs.existsSync('/workspace');
+
+if (isAppPlatform) {
+  console.log('📱 Detected DigitalOcean App Platform environment');
+}
 
 // Thử load config từ file nếu có
 try {
-  const configPath = path.join(__dirname, '../config/server_config.js');
+  // App Platform: try appplatform config first
+  let configPath = path.join(__dirname, '../config/server_config.js');
+  
+  if (isAppPlatform) {
+    const appPlatformConfig = path.join(__dirname, '../config/server_config.appplatform.js');
+    if (fs.existsSync(appPlatformConfig)) {
+      configPath = appPlatformConfig;
+      console.log('📱 Using App Platform config');
+    }
+  }
+  
   if (fs.existsSync(configPath)) {
     const fileConfig = require(configPath);
     CONFIG = { ...CONFIG, ...fileConfig };
@@ -28,15 +48,44 @@ try {
   }
 } catch (err) {
   console.log('⚠️ Không thể load config file, sử dụng config mặc định');
+  console.error(err.message);
 }
 
 console.log('🔧 Config hiện tại:', CONFIG);
 
-// Tạo WebSocket server trên port riêng
-const wss = new WebSocket.Server({ port: CONFIG.wsPort || 3000 });
+// App Platform uses PORT env variable
+const wsPort = process.env.PORT || CONFIG.wsPort || 3000;
+console.log(`🔌 WebSocket server sẽ chạy trên port ${wsPort}`);
 
-console.log(`🚀 WebSocket server đang chạy trên port ${CONFIG.wsPort || 3000}`);
-console.log(`🔌 WebSocket server sẵn sàng nhận kết nối`);
+// Tạo HTTP server cho health check (App Platform requirement)
+const httpServer = http.createServer((req, res) => {
+  // Health check endpoint
+  if (req.url === '/health' || req.url === '/health/') {
+    res.writeHead(200, { 'Content-Type': 'application/json' });
+    res.end(JSON.stringify({ 
+      status: 'healthy', 
+      timestamp: new Date().toISOString(),
+      clients: Object.keys(clients).length,
+      rooms: Object.keys(livestreamRooms).length
+    }));
+    return;
+  }
+  
+  // Default response
+  res.writeHead(200, { 'Content-Type': 'text/plain' });
+  res.end('WebSocket Server Running');
+});
+
+// Tạo WebSocket server attached to HTTP server
+const wss = new WebSocket.Server({ server: httpServer });
+
+// Start HTTP server
+httpServer.listen(wsPort, '0.0.0.0', () => {
+  console.log(`🚀 WebSocket server đang chạy trên port ${wsPort}`);
+  console.log(`🔌 WebSocket server sẵn sàng nhận kết nối`);
+  console.log(`💚 Health check available at http://localhost:${wsPort}/health`);
+});
+
 let clients = {};
 
 wss.on('connection', function connection(ws) {

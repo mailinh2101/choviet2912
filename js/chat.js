@@ -2,7 +2,6 @@
 function getWebSocketURL() {
   const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
   const hostname = window.location.hostname;
-  const port = window.location.port || (window.location.protocol === 'https:' ? '443' : '80');
   
   // Nếu đang chạy trên localhost (development)
   if (hostname === 'localhost' || hostname === '127.0.0.1') {
@@ -10,8 +9,8 @@ function getWebSocketURL() {
   }
   
   // Nếu đang chạy trên hosting (production)
-  // Sử dụng cùng domain nhưng port khác cho WebSocket
-  return `${protocol}//${hostname}:3000`;
+  // Sử dụng path /ws/ qua Nginx reverse proxy
+  return `${protocol}//${hostname}/ws/`;
 }
 
 let socket = null;

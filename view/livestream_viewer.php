@@ -812,6 +812,20 @@ echo "<script>document.title = '" . htmlspecialchars($livestream['title']) . " -
     </div>
 
     <script>
+        // WebSocket URL helper function
+        function getWebSocketURL() {
+            const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+            const hostname = window.location.hostname;
+            
+            // Development (localhost)
+            if (hostname === 'localhost' || hostname === '127.0.0.1') {
+                return 'ws://localhost:3000';
+            }
+            
+            // Production (Nginx reverse proxy)
+            return `${protocol}//${hostname}/ws/`;
+        }
+
         // Variables
         let ws = null;
         let isConnected = false;
@@ -821,7 +835,9 @@ echo "<script>document.title = '" . htmlspecialchars($livestream['title']) . " -
 
         // Initialize WebSocket
         function initWebSocket() {
-            ws = new WebSocket('ws://localhost:3000');
+            // Auto-detect WebSocket URL for production/development
+            const wsUrl = getWebSocketURL();
+            ws = new WebSocket(wsUrl);
             
             ws.onopen = function() {
                 console.log('WebSocket connected');

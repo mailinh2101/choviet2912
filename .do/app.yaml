@@ -1,0 +1,111 @@
+# DigitalOcean App Platform Specification
+# Deploy PHP + Node.js WebSocket application
+
+name: choviet2912
+region: sgp
+
+# Environment variables (set in App Platform dashboard)
+envs:
+  - key: NODE_ENV
+    value: production
+  - key: WS_PORT
+    value: "3000"
+  - key: DB_HOST
+    scope: RUN_TIME
+    type: SECRET
+  - key: DB_NAME
+    scope: RUN_TIME
+    type: SECRET
+  - key: DB_USER
+    scope: RUN_TIME
+    type: SECRET
+  - key: DB_PASSWORD
+    scope: RUN_TIME
+    type: SECRET
+  - key: WS_SECRET
+    scope: RUN_TIME
+    type: SECRET
+
+# Database - MySQL
+databases:
+  - engine: MYSQL
+    name: choviet29-db
+    production: true
+    version: "8"
+
+# Main PHP Web Service
+services:
+  # PHP Application (main website)
+  - name: web
+    source:
+      repo: mailinh2101/choviet2912
+      branch: main
+    build_command: |
+      echo "Building PHP application..."
+      mkdir -p chat logs img
+      chmod 755 chat logs img
+    run_command: |
+      echo "Starting PHP application..."
+      php -S 0.0.0.0:8080 -t .
+    environment_slug: php
+    instance_count: 1
+    instance_size_slug: basic-xxs
+    http_port: 8080
+    routes:
+      - path: /
+    health_check:
+      http_path: /
+      initial_delay_seconds: 30
+      period_seconds: 10
+      timeout_seconds: 5
+      success_threshold: 1
+      failure_threshold: 3
+    envs:
+      - key: APP_ENV
+        value: production
+      - key: CHAT_PATH
+        value: /workspace/chat
+      - key: PROJECT_ROOT
+        value: /workspace
+
+  # Node.js WebSocket Service
+  - name: websocket
+    source:
+      repo: mailinh2101/choviet2912
+      branch: main
+    build_command: |
+      echo "Installing Node.js dependencies..."
+      npm install --production
+    run_command: node js/server.js
+    environment_slug: node-js
+    instance_count: 1
+    instance_size_slug: basic-xxs
+    http_port: 3000
+    routes:
+      - path: /ws
+    health_check:
+      http_path: /health
+      initial_delay_seconds: 30
+      period_seconds: 10
+      timeout_seconds: 5
+      success_threshold: 1
+      failure_threshold: 3
+    envs:
+      - key: WS_PORT
+        value: "3000"
+      - key: NODE_ENV
+        value: production
+
+# Static assets (optional - for better performance)
+static_sites:
+  - name: static
+    source:
+      repo: mailinh2101/choviet2912
+      branch: main
+    build_command: echo "No build needed for static assets"
+    output_dir: /
+    routes:
+      - path: /css
+      - path: /js
+      - path: /img
+    catchall_document: index.html

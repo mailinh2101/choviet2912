@@ -513,10 +513,23 @@ document.addEventListener('DOMContentLoaded', function() {
     setInterval(updateViewerCount, 5000);
 });
 
+// WebSocket URL helper function
+function getWebSocketURL() {
+    const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+    const hostname = window.location.hostname;
+    
+    // Development (localhost)
+    if (hostname === 'localhost' || hostname === '127.0.0.1') {
+        return 'ws://localhost:3000';
+    }
+    
+    // Production (Nginx reverse proxy)
+    return `${protocol}//${hostname}/ws/`;
+}
+
 // Kết nối WebSocket
 function connectWebSocket() {
-    const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-    const wsUrl = `${protocol}//${window.location.hostname}:3000/livestream`;
+    const wsUrl = getWebSocketURL();
     
     liveSocket = new WebSocket(wsUrl);
     

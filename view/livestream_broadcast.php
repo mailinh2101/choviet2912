@@ -195,6 +195,20 @@ echo "<script>document.title = 'Broadcast Livestream - Chợ Việt';</script>";
 </div>
 
 <script>
+// WebSocket URL helper function
+function getWebSocketURL() {
+    const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+    const hostname = window.location.hostname;
+    
+    // Development (localhost)
+    if (hostname === 'localhost' || hostname === '127.0.0.1') {
+        return 'ws://localhost:3000';
+    }
+    
+    // Production (Nginx reverse proxy)
+    return `${protocol}//${hostname}/ws/`;
+}
+
 const LIVESTREAM_ID = <?= $livestream_id ?>;
 const USER_ID = <?= isset($_SESSION['user_id']) ? (int)$_SESSION['user_id'] : 0 ?>;
 const USERNAME = '<?= isset($_SESSION['username']) ? addslashes($_SESSION['username']) : 'Streamer' ?>';
@@ -203,7 +217,9 @@ const log = (m)=>{ document.getElementById('status').textContent = m; console.lo
 let localStream=null, broadcastWs=null, pc=null;
 
 function initWs(){
-  broadcastWs = new WebSocket('ws://localhost:3000');
+  // Auto-detect WebSocket URL for production/development
+  const wsUrl = getWebSocketURL();
+  broadcastWs = new WebSocket(wsUrl);
   broadcastWs.onopen = ()=>{
     log('WebSocket connected');
     broadcastWs.send(JSON.stringify({ type:'join_livestream', livestream_id:LIVESTREAM_ID, user_id: USER_ID||('broadcaster_'+Date.now()), user_type:'streamer' }));
