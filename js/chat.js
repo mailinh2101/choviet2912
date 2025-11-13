@@ -128,7 +128,40 @@ function sendMessage(noiDung) {
     console.error("❌ TO_USER_ID chưa được định nghĩa");
     return;
   }
+
   const payload = {
+    from: CURRENT_USER_ID,
+    to: TO_USER_ID,
+    content: noiDung,
+    product_id: ID_SAN_PHAM
+  };
+
+  // 💾 Lưu tin nhắn vào database thông qua API
+  fetch('/api/chat-api.php', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify(payload)
+  })
+    .then(res => res.json())
+    .then(data => {
+      if (data.status === 'ok') {
+        console.log('✅ Tin nhắn đã lưu vào database');
+        // 🎨 Hiển thị tin nhắn ngay trên giao diện
+        renderMessage({
+          from: CURRENT_USER_ID,
+          content: noiDung,
+          timestamp: new Date().toISOString()
+        }, false);
+      } else {
+        console.error('❌ Lỗi lưu tin nhắn:', data.status);
+      }
+    })
+    .catch(err => console.error('❌ Lỗi kết nối API:', err));
+
+  // 📡 Gửi qua WebSocket nếu có (để realtime)
+  const wsPayload = {
     type: 'message',
     from: CURRENT_USER_ID,
     to: TO_USER_ID,
@@ -136,9 +169,9 @@ function sendMessage(noiDung) {
     product_id: ID_SAN_PHAM
   };
   if (socket && socket.readyState === WebSocket.OPEN) {
-    socket.send(JSON.stringify(payload));
+    socket.send(JSON.stringify(wsPayload));
   } else {
-    sendQueue.push(payload);
+    sendQueue.push(wsPayload);
   }
 }
 

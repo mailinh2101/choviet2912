@@ -58,29 +58,76 @@ class mChat extends Connect {
     
     public function sendMessage($from, $to, $content, $idSanPham = null) {
         $conn = $this->connect();
+        
+        // ✅ Lưu tin nhắn vào database (nội dung + timestamp)
+        // product_id là NOT NULL nên sử dụng 0 khi không có
+        $product_id_val = $idSanPham ?? 0;
+        $is_read = 0; // Tin nhắn mới luôn chưa đọc
+        
+        $stmt = $conn->prepare("INSERT INTO messages (sender_id, receiver_id, content, product_id, is_read, created_time) 
+                                VALUES (?, ?, ?, ?, ?, NOW())");
+        if (!$stmt) {
+            error_log("❌ Prepare error: " . $conn->error);
+            return false;
+        }
+        
+        $stmt->bind_param("iisii", $from, $to, $content, $product_id_val, $is_read);
+        $result = $stmt->execute();
+        
+        if (!$result) {
+            error_log("❌ Execute error: " . $stmt->error);
+            return false;
+        }
+        
+        error_log("✅ Tin nhắn từ $from đến $to đã được lưu vào database");
+        
+        // 💾 THÊM: Lưu vào file JSON
+        $this->saveMessageToJSON($from, $to, $content);
+        
+        return true;
+    }
+    
+    /**
+     * Lưu tin nhắn vào file JSON
+     */
+    private function saveMessageToJSON($from, $to, $content) {
         $min = min($from, $to);
         $max = max($from, $to);
-        $fileName = "chat_" . $min . "_" . $max . ".json";
-    
-        // ⚠️ Kiểm tra nếu chưa có dòng nào thì mới insert tên file vào DB
-        $stmtCheck = $conn->prepare("SELECT COUNT(*) FROM messages WHERE 
-            (sender_id = ? AND receiver_id = ?) OR 
-            (sender_id = ? AND receiver_id = ?)");
-        $stmtCheck->bind_param("iiii", $from, $to, $to, $from);
-        $stmtCheck->execute();
-        $stmtCheck->bind_result($count);
-        $stmtCheck->fetch();
-        $stmtCheck->close();
-    
-        if ($count == 0) {
-            // ✅ Chỉ lưu 1 dòng duy nhất để ghi nhớ tên file
-            $stmt = $conn->prepare("INSERT INTO messages (sender_id, receiver_id, product_id, content, created_time) 
-                                    VALUES (?, ?, ?, ?, NOW())");
-            $stmt->bind_param("iiis", $from, $to, $idSanPham, $fileName);
-            return $stmt->execute();
+        $fileName = "chat_{$min}_{$max}.json";
+        $filePath = __DIR__ . "/../chat/" . $fileName;
+        
+        // Tạo thư mục chat nếu chưa tồn tại
+        if (!is_dir(__DIR__ . "/../chat")) {
+            mkdir(__DIR__ . "/../chat", 0755, true);
         }
-    
-        return true; // Nếu đã có rồi thì không cần lưu thêm nữa
+        
+        // Lấy tin nhắn cũ từ file (nếu có)
+        $messages = [];
+        if (file_exists($filePath)) {
+            $data = json_decode(file_get_contents($filePath), true);
+            if (is_array($data)) {
+                $messages = $data;
+            }
+        }
+        
+        // Thêm tin nhắn mới
+        $newMessage = [
+            'from' => (int)$from,
+            'to' => (int)$to,
+            'content' => $content,
+            'timestamp' => date('c') // ISO 8601 format
+        ];
+        
+        $messages[] = $newMessage;
+        
+        // Lưu vào file
+        $result = file_put_contents($filePath, json_encode($messages, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE));
+        
+        if ($result) {
+            error_log("✅ Tin nhắn cũng được lưu vào file JSON: $filePath");
+        } else {
+            error_log("⚠️ Không thể lưu vào file JSON: $filePath");
+        }
     }
 
     public function readChatFile($from, $to) {
