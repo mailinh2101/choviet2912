@@ -65,6 +65,12 @@ include_once __DIR__ . "/header.php";
 // Override title for livestream page
 echo "<script>document.title = '" . htmlspecialchars($livestream['title']) . " - Xem Livestream - Chợ Việt';</script>";
 ?>
+    <script>
+        // Make PHP values available to page scripts to avoid ReferenceError
+        const LIVESTREAM_ID = <?= isset($livestream_id) ? (int)$livestream_id : 0 ?>;
+        const USER_ID = <?= isset($_SESSION['user_id']) ? (int)$_SESSION['user_id'] : 0 ?>;
+        const USERNAME = <?= isset($_SESSION['username']) ? json_encode($_SESSION['username']) : json_encode('Khách') ?>;
+    </script>
     <style>
         .livestream-container {
             background: #0e0e0e;

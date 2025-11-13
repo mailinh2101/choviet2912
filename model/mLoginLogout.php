@@ -467,8 +467,10 @@ class mLoginLogout extends Connect {
      * Lưu OTP mới
      */
     private function saveOTP($conn, $contact, $otp, $expires_at) {
-        $stmt = $conn->prepare("INSERT INTO otp_verification (email, otp, expires_at) VALUES (?, ?, ?)");
-        $stmt->bind_param("sss", $contact, $otp, $expires_at);
+        // Include created_at because the table defines created_at as NOT NULL
+        $created_at = date('Y-m-d H:i:s');
+        $stmt = $conn->prepare("INSERT INTO otp_verification (email, otp, created_at, expires_at) VALUES (?, ?, ?, ?)");
+        $stmt->bind_param("ssss", $contact, $otp, $created_at, $expires_at);
         $result = $stmt->execute();
         $stmt->close();
         

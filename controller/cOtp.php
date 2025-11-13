@@ -2,6 +2,26 @@
 require_once __DIR__ . '/../vendor/autoload.php';
 require_once __DIR__ . '/../model/mLoginLogout.php';
 require_once __DIR__ . '/../helpers/logger.php';
+
+// Fallback: some environments include a lightweight PHPMailer implementation
+// directly under vendor/phpmailer/ (not via Composer autoload). If the
+// namespaced class isn't available after requiring autoload, include the
+// library files directly so createMailer() can instantiate PHPMailer.
+if (!class_exists('\PHPMailer\\PHPMailer\\PHPMailer')) {
+    $phPMailerPath = __DIR__ . '/../vendor/phpmailer/PHPMailer.php';
+    $phpmailerException = __DIR__ . '/../vendor/phpmailer/Exception.php';
+    $phpmailerSMTP = __DIR__ . '/../vendor/phpmailer/SMTP.php';
+
+    if (file_exists($phpmailerException)) {
+        require_once $phpmailerException;
+    }
+    if (file_exists($phpmailerSMTP)) {
+        require_once $phpmailerSMTP;
+    }
+    if (file_exists($phPMailerPath)) {
+        require_once $phPMailerPath;
+    }
+}
 use PHPMailer\PHPMailer\PHPMailer;
 use PHPMailer\PHPMailer\Exception;
 
@@ -176,7 +196,13 @@ class OtpController {
         $mail->addAddress($email);
         
         // Nội dung email
-        $mail->isHTML(true);
+        // PHPMailer real library exposes isHTML() method; our lightweight
+        // fallback may implement isHTML as a property, so handle both.
+        if (method_exists($mail, 'isHTML')) {
+            $mail->isHTML(true);
+        } else {
+            $mail->isHTML = true;
+        }
         
         if ($purpose === 'reset_password') {
             $mail->Subject = 'Mã xác thực đặt lại mật khẩu Chợ Việt';

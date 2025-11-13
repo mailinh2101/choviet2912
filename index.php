@@ -1,12 +1,28 @@
 <?php
+// === REQUEST TIMING & DEBUG LOGGING ===
+$_START_TIME = microtime(true);
+function _log_step($label) {
+    global $_START_TIME;
+    $elapsed = round((microtime(true) - $_START_TIME) * 1000, 2);
+    error_log("[REQUEST_TIMING] [$elapsed ms] " . ($_SERVER['REQUEST_URI'] ?? 'unknown') . " -> " . $label);
+}
+_log_step("Request started");
+
+// Load environment variables FIRST
+require_once(__DIR__ . "/config/bootstrap.php");
+_log_step("Bootstrap loaded (.env vars loaded)");
+
 // Include Security helper
 include_once("helpers/Security.php");
+_log_step("Security.php loaded");
 
 // Khởi tạo session bảo mật
 Security::initSecureSession();
+_log_step("Session initialized");
 
 // Validate session
 Security::validateSession();
+_log_step("Session validated");
 
 //xử lý đăng xuất
 if (isset($_GET['action']) && $_GET['action'] == 'logout') {
@@ -14,14 +30,22 @@ if (isset($_GET['action']) && $_GET['action'] == 'logout') {
     header('Location: index.php?login');
     exit;
 }
+_log_step("Logout check completed");
+
 include_once("controller/cCategory.php");
+_log_step("cCategory loaded");
 $p = new cCategory();
+_log_step("cCategory instantiated");
 
 include_once("controller/cProduct.php");
+_log_step("cProduct loaded");
 $c = new cProduct();
+_log_step("cProduct instantiated");
 
 include_once("controller/cDetailProduct.php");
+_log_step("cDetailProduct loaded");
 $controller = new cDetailProduct();
+_log_step("cDetailProduct instantiated");
 ?>
 
 
@@ -63,6 +87,7 @@ $controller = new cDetailProduct();
 
 <body>
     <?php
+        _log_step("Router: handling GET requests");
         if (isset($_GET['action']) && $_GET['action'] == 'capNhatTrangThai') {
             include_once("controller/cPost.php");
             $ctrl = new cPost();
@@ -331,6 +356,7 @@ $controller = new cDetailProduct();
         } else {
             include_once("view/index.php");
         }
+        _log_step("Router: view included");
     ?>
 
     

@@ -51,6 +51,18 @@ class LoginLogoutController {
             $this->createUserSession($user);
             $this->redirectBasedOnRole($user['role_id']);
         } else {
+            // Support legacy MD5-hashed passwords: if stored password looks like MD5 (32 hex)
+            if ($user && preg_match('/^[a-f0-9]{32}$/i', $user['password'])) {
+                if (md5($passwordPlain) === $user['password']) {
+                    // Rehash to bcrypt and update stored password for future logins
+                    $newHash = password_hash($passwordPlain, PASSWORD_BCRYPT);
+                    $this->model->updatePassword($user['email'], $newHash);
+                    // Create session and redirect
+                    $this->createUserSession($user);
+                    $this->redirectBasedOnRole($user['role_id']);
+                }
+            }
+            // If no match, return error JSON below
             // Trả về JSON thay vì chuyển hướng
             header('Content-Type: application/json');
             echo json_encode(['success' => false, 'message' => '❌ Email/Tên đăng nhập hoặc mật khẩu không đúng']);
@@ -192,9 +204,9 @@ class LoginLogoutController {
         // Ghi log thông tin đăng ký
         error_log("Đăng ký tài khoản: username=" . $data['username'] . ", email=$email");
         
-        // Thực hiện đăng ký
-        $password_md5 = md5($data['password']);
-        $ok = $this->model->registerUser($data['username'], $email, '', $password_md5, 1);
+    // Thực hiện đăng ký (store bcrypt hash)
+    $password_hash = password_hash($data['password'], PASSWORD_BCRYPT);
+    $ok = $this->model->registerUser($data['username'], $email, '', $password_hash, 1);
         
         if ($ok) {
             // Trả về JSON response thay vì redirect
@@ -294,9 +306,9 @@ class LoginLogoutController {
                 return;
             }
             
-            // Cập nhật mật khẩu mới
-            $password_md5 = md5($newPassword);
-            $ok = $this->model->updatePassword($email, $password_md5);
+            // Cập nhật mật khẩu mới (bcrypt)
+            $password_hash = password_hash($newPassword, PASSWORD_BCRYPT);
+            $ok = $this->model->updatePassword($email, $password_hash);
             
             if ($ok) {
                 echo json_encode(['success' => true, 'message' => '✅ Đặt lại mật khẩu thành công!']);
