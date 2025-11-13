@@ -430,7 +430,7 @@ include_once("controller/cLoginLogout.php");
                 }
                 
                 try {
-                    const response = await fetch('controller/cLoginLogout.php', {
+                    const response = await fetch('/controller/cLoginLogout.php', {
                         method: 'POST',
                         headers: {
                             'Content-Type': 'application/x-www-form-urlencoded',
@@ -469,7 +469,7 @@ include_once("controller/cLoginLogout.php");
                 }
                 
                 try {
-                    const response = await fetch('controller/cLoginLogout.php', {
+                    const response = await fetch('/controller/cLoginLogout.php', {
                         method: 'POST',
                         headers: {
                             'Content-Type': 'application/x-www-form-urlencoded',
@@ -509,7 +509,7 @@ include_once("controller/cLoginLogout.php");
                     this.sendOtpBtn.disabled = true;
                     this.sendOtpBtn.textContent = 'Đang gửi...';
                     
-                    const response = await fetch('controller/cOtp.php', {
+                    const response = await fetch('/controller/cOtp.php', {
                         method: 'POST',
                         headers: {
                             'Content-Type': 'application/x-www-form-urlencoded',
@@ -601,7 +601,7 @@ include_once("controller/cLoginLogout.php");
                     const formData = new FormData(this.form);
                     formData.append('register', '1');
                     
-                    const response = await fetch('controller/cLoginLogout.php', {
+                    const response = await fetch('/controller/cLoginLogout.php', {
                         method: 'POST',
                         body: formData
                     });

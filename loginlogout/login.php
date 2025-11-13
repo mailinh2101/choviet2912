@@ -454,7 +454,7 @@ include_once("controller/cLoginLogout.php");
                     formData.append('email', this.loginEmail.value);
                     formData.append('password', this.loginPassword.value);
                     
-                    const response = await fetch('controller/cLoginLogout.php', {
+                    const response = await fetch('/controller/cLoginLogout.php', {
                         method: 'POST',
                         body: formData
                     });
@@ -514,7 +514,7 @@ include_once("controller/cLoginLogout.php");
                     this.sendResetOtpBtn.disabled = true;
                     this.sendResetOtpBtn.textContent = 'Đang gửi...';
                     
-                    const response = await fetch('controller/cOtp.php', {
+                    const response = await fetch('/controller/cOtp.php', {
                         method: 'POST',
                         headers: {
                             'Content-Type': 'application/x-www-form-urlencoded',
@@ -578,7 +578,7 @@ include_once("controller/cLoginLogout.php");
                     formData.append('otp', this.resetOtp.value);
                     formData.append('new_password', this.newPassword.value);
                     
-                    const response = await fetch('controller/cLoginLogout.php', {
+                    const response = await fetch('/controller/cLoginLogout.php', {
                         method: 'POST',
                         body: formData
                     });

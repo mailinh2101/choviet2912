@@ -8,7 +8,16 @@
  * @return string Base URL
  */
 function getBaseUrl() {
-    $protocol = isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on' ? 'https' : 'http';
+    // 🔍 Phát hiện protocol đúng: kiểm tra X-Forwarded-Proto (từ proxy/load balancer)
+    $protocol = 'http';
+    if (!empty($_SERVER['HTTP_X_FORWARDED_PROTO'])) {
+        // DigitalOcean App Platform, AWS, Heroku, etc sử dụng header này
+        $protocol = strtolower($_SERVER['HTTP_X_FORWARDED_PROTO']);
+    } elseif (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on') {
+        // Local/traditional HTTPS
+        $protocol = 'https';
+    }
+    
     $host = $_SERVER['HTTP_HOST'];
     $scriptName = $_SERVER['SCRIPT_NAME'];
     $path = dirname($scriptName);
