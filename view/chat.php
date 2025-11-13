@@ -16,16 +16,6 @@ $conversations = $cChat->getConversationUsers($current_user_id);
 $receiver = ($to_user_id) ? $cUser->getUserById($to_user_id) : null;
 ?>
 
-<script>
-const CURRENT_USER_ID = <?= $current_user_id ?>;
-<?php if ($to_user_id): ?>
-const TO_USER_ID = <?= $to_user_id ?>;
-const ID_SAN_PHAM = <?= $product_id ?>;
-<?php else: ?>
-const ID_SAN_PHAM = 0;
-<?php endif; ?>
-</script>
-
 <style>
   .chat-user.active {
     border: 2px solid #ffc107 !important;
@@ -196,7 +186,17 @@ const ID_SAN_PHAM = 0;
   </div>
 </div>
 
-
+<!-- Define JS globals BEFORE loading chat.js to ensure they're available -->
+<script>
+const CURRENT_USER_ID = <?= $current_user_id ?>;
+<?php if ($to_user_id): ?>
+const TO_USER_ID = <?= $to_user_id ?>;
+const ID_SAN_PHAM = <?= $product_id ?>;
+<?php else: ?>
+const TO_USER_ID = undefined;
+const ID_SAN_PHAM = 0;
+<?php endif; ?>
+</script>
 
 <script src="js/chat.js"></script>
 <script>
@@ -270,7 +270,7 @@ console.log('API check-reviewed:', checkData);
     if (!res.ok) return;
     const msg = await res.json();
 
-    const firstTime = new Date(msg.thoi_pricen).getTime();
+    const firstTime = new Date(msg.thoi_pricen).getTime()
     const now = Date.now();
     const isSender = msg.sender_id == from;
     const timePassed = (now - firstTime) > 3600000; // hơn 1 giờ

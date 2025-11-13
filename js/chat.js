@@ -124,6 +124,10 @@ function renderMessage(msg, isFromSocket = false) {
 // Gửi tin nhắn
 function sendMessage(noiDung) {
   if (!noiDung.trim()) return;
+  if (typeof TO_USER_ID === 'undefined' || !TO_USER_ID) {
+    console.error("❌ TO_USER_ID chưa được định nghĩa");
+    return;
+  }
   const payload = {
     type: 'message',
     from: CURRENT_USER_ID,
@@ -145,7 +149,7 @@ function sendMessage(noiDung) {
 window.addEventListener("DOMContentLoaded", () => {
   chatBox = document.getElementById('chatMessages');
   // Dùng đường dẫn tuyệt đối từ gốc site để tránh lệch path khi ở trong subfolder (vd: /view/...)
-  if (typeof TO_USER_ID !== 'undefined') {
+  if (typeof TO_USER_ID !== 'undefined' && TO_USER_ID) {
     fetch(`/api/chat-file-api.php?from=${CURRENT_USER_ID}&to=${TO_USER_ID}`)
       .then(res => res.json())
       .then(messages => {
