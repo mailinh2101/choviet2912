@@ -2,12 +2,12 @@
 function getWebSocketURL() {
   const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
   const hostname = window.location.hostname;
-  
+
   // Nếu đang chạy trên localhost (development)
   if (hostname === 'localhost' || hostname === '127.0.0.1') {
     return 'ws://localhost:3000';
   }
-  
+
   // Nếu đang chạy trên hosting (production)
   // Sử dụng path /ws/ qua Nginx reverse proxy
   return `${protocol}//${hostname}/ws/`;
@@ -90,7 +90,7 @@ function connectSocket() {
           Object.keys(newMap).forEach(k => { cached[k] = newMap[k]; });
         }
         localStorage.setItem(key, JSON.stringify(cached));
-      } catch (e) {}
+      } catch (e) { }
     }
   });
 }
@@ -170,7 +170,7 @@ window.addEventListener("DOMContentLoaded", () => {
     .then(unread => {
       try {
         localStorage.setItem(`unread:${CURRENT_USER_ID}`, JSON.stringify(unread || {}));
-      } catch (e) {}
+      } catch (e) { }
       if (typeof window.onUnreadBootstrap === 'function') {
         window.onUnreadBootstrap(unread);
       } else {
@@ -178,5 +178,5 @@ window.addEventListener("DOMContentLoaded", () => {
         window.__UNREAD_BOOT = unread;
       }
     })
-    .catch(() => {});
+    .catch(() => { });
 });
